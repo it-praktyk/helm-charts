@@ -324,6 +324,11 @@ spec:
               secretKeyRef:
                 name: {{ template "atlantis.basicAuthSecretName" . }}
                 key: password
+          - name: ATLANTIS_WEB_AUTH_HEADER
+            valueFrom:
+              secretKeyRef:
+                name: {{ template "atlantis.basicAuthSecretName" . }}
+                key: header
           {{- end}}
           {{- if .Values.livenessProbe.enabled }}
           livenessProbe:
@@ -331,6 +336,11 @@ spec:
               path: /healthz
               port: 4141
               scheme: {{ .Values.livenessProbe.scheme }}
+              {{- if .Values.basicAuth }}
+              httpHeaders:
+                - name: Authorization
+                  value: $(ATLANTIS_WEB_AUTH_HEADER) | b64enc
+              {{- end }}
             initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
@@ -343,6 +353,11 @@ spec:
               path: /healthz
               port: 4141
               scheme: {{ .Values.readinessProbe.scheme }}
+              {{- if .Values.basicAuth }}
+              httpHeaders:
+                - name: Authorization
+                  value: $(ATLANTIS_WEB_AUTH_HEADER) | b64enc
+              {{- end }}
             initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
